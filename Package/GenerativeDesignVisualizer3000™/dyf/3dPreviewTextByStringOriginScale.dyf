@@ -1,0 +1,662 @@
+{
+  "Uuid": "594a031c-a906-415b-98b4-04860abe557c",
+  "IsCustomNode": true,
+  "Category": "GenerativeDesign.Visualize",
+  "Description": "Creates text in the dynamo viewport from a string, origin, scale and font family name. Also offers the option to center the text. This is useful for Generative Design Visualization.",
+  "Name": "3dPreviewTextByStringOriginScale",
+  "ElementResolver": {
+    "ResolutionMap": {
+      "Point": {
+        "Key": "Autodesk.DesignScript.Geometry.Point",
+        "Value": "ProtoGeometry.dll"
+      }
+    }
+  },
+  "Inputs": [],
+  "Outputs": [],
+  "Nodes": [
+    {
+      "ConcreteType": "Dynamo.Graph.Nodes.ZeroTouch.DSFunction, DynamoCore",
+      "NodeType": "FunctionNode",
+      "FunctionSignature": "Autodesk.DesignScript.Geometry.CoordinateSystem.ByOrigin@Autodesk.DesignScript.Geometry.Point",
+      "Id": "f2759991c3f04fd6bec17391304aff3b",
+      "Inputs": [
+        {
+          "Id": "e606a1d05d714923b57667ef91acdab4",
+          "Name": "origin",
+          "Description": "Point\nDefault value : Autodesk.DesignScript.Geometry.Point.ByCoordinates(0, 0, 0)",
+          "UsingDefaultValue": true,
+          "Level": 2,
+          "UseLevels": false,
+          "KeepListStructure": false
+        }
+      ],
+      "Outputs": [
+        {
+          "Id": "f54b5e75b7384b0f8cd2dbcb8d36b9ea",
+          "Name": "CoordinateSystem",
+          "Description": "CoordinateSystem",
+          "UsingDefaultValue": false,
+          "Level": 2,
+          "UseLevels": false,
+          "KeepListStructure": false
+        }
+      ],
+      "Replication": "Shortest",
+      "Description": "Create a CoordinateSystem with origin at input Point, with X and Y Axes set as WCS X and Y Axes.\n\nCoordinateSystem.ByOrigin (origin: Point = Autodesk.DesignScript.Geometry.Point.ByCoordinates(0, 0, 0)): CoordinateSystem"
+    },
+    {
+      "ConcreteType": "Dynamo.Graph.Nodes.ZeroTouch.DSFunction, DynamoCore",
+      "NodeType": "FunctionNode",
+      "FunctionSignature": "Autodesk.DesignScript.Geometry.Geometry.Transform@Autodesk.DesignScript.Geometry.CoordinateSystem,Autodesk.DesignScript.Geometry.CoordinateSystem",
+      "Id": "3dcfc6354daa47b09fa46fab6ea48151",
+      "Inputs": [
+        {
+          "Id": "92901bdec19f4f9593f3d4987797acf9",
+          "Name": "geometry",
+          "Description": "Autodesk.DesignScript.Geometry.Geometry",
+          "UsingDefaultValue": false,
+          "Level": 2,
+          "UseLevels": false,
+          "KeepListStructure": false
+        },
+        {
+          "Id": "2e1792cd17a54715b624ad0b26c6fc02",
+          "Name": "fromCoordinateSystem",
+          "Description": "CoordinateSystem",
+          "UsingDefaultValue": false,
+          "Level": 2,
+          "UseLevels": false,
+          "KeepListStructure": false
+        },
+        {
+          "Id": "06f7df6978184bdfafe8ca8c20b5792f",
+          "Name": "contextCoordinateSystem",
+          "Description": "CoordinateSystem",
+          "UsingDefaultValue": false,
+          "Level": 2,
+          "UseLevels": false,
+          "KeepListStructure": false
+        }
+      ],
+      "Outputs": [
+        {
+          "Id": "5ff4c60f59ca45f79274326819afe0a2",
+          "Name": "Geometry",
+          "Description": "Transformed Geometry.",
+          "UsingDefaultValue": false,
+          "Level": 2,
+          "UseLevels": false,
+          "KeepListStructure": false
+        }
+      ],
+      "Replication": "Shortest",
+      "Description": "Transforms this geometry from source CoordinateSystem to a new context CoordinateSystem.\n\nGeometry.Transform (fromCoordinateSystem: CoordinateSystem, contextCoordinateSystem: CoordinateSystem): Geometry"
+    },
+    {
+      "ConcreteType": "Dynamo.Graph.Nodes.CodeBlockNodeModel, DynamoCore",
+      "NodeType": "CodeBlockNode",
+      "Code": "points = out[0];\ncurves = out[1];",
+      "Id": "80ec4b2d0ada4fcebc55482589040221",
+      "Inputs": [
+        {
+          "Id": "acc35ad89aa54050aade9ca26c73a94f",
+          "Name": "out",
+          "Description": "out",
+          "UsingDefaultValue": false,
+          "Level": 2,
+          "UseLevels": false,
+          "KeepListStructure": false
+        }
+      ],
+      "Outputs": [
+        {
+          "Id": "ba020ef8eff7423f9a4da3cb3eb12301",
+          "Name": "",
+          "Description": "points",
+          "UsingDefaultValue": false,
+          "Level": 2,
+          "UseLevels": false,
+          "KeepListStructure": false
+        },
+        {
+          "Id": "80e2e508edcc43a18a96bd0ee7026e73",
+          "Name": "",
+          "Description": "curves",
+          "UsingDefaultValue": false,
+          "Level": 2,
+          "UseLevels": false,
+          "KeepListStructure": false
+        }
+      ],
+      "Replication": "Disabled",
+      "Description": "Allows for DesignScript code to be authored directly"
+    },
+    {
+      "ConcreteType": "PythonNodeModels.PythonNode, PythonNodeModels",
+      "NodeType": "PythonScriptNode",
+      "Code": "# based largely on https://github.com/DynamoDS/DynamoText\r\n# imports\r\nimport clr\r\nclr.AddReference('ProtoGeometry')\r\nfrom Autodesk.DesignScript.Geometry import Point as dsPoint, Line as dsLine, BoundingBox as dsBox\r\nclr.AddReference('System')\r\nfrom System.Collections.Generic import List\r\nfrom System.Globalization import *\r\nclr.AddReference('WindowsBase')\r\nfrom System.Windows import Point\r\nclr.AddReference('PresentationCore')\r\nfrom System.Windows.Media import *\r\nfrom System.Windows import FlowDirection, FontStyles, FontWeights, FontStretches\r\n\r\n#definitions\r\ndef LineBetweenPoints(origin,scale,a,b):\r\n\tpt1 = dsPoint.ByCoordinates((a.X * scale) + origin.X, ((-a.Y + 1) * scale) + origin.Y, origin.Z)\r\n\tpt2 = dsPoint.ByCoordinates((b.X * scale) + origin.X, ((-b.Y + 1) * scale) + origin.Y, origin.Z)\r\n\tcrv = dsLine.ByStartPointEndPoint(pt1, pt2)\r\n\treturn crv\r\n\r\ndef GetCurves(textGeometry):\r\n\tcrvs = []\r\n\tfor figure in textGeometry.GetFlattenedPathGeometry().Figures:\r\n\t\tinit = figure.StartPoint\r\n\t\ta = figure.StartPoint\r\n\t\tb = None\r\n\t\r\n\t\tfor segment in figure.GetFlattenedPathFigure().Segments:\r\n\t\t\tlineSeg = segment\r\n\t\t\t\r\n\t\t\tif lineSeg is not None and lineSeg is LineSegment:\r\n\t\t\t\t b = lineSeg.Point\r\n\t\t\t\t crv = LineBetweenPoints(origin, scale, a, b)\r\n\t\t\t\t a = b\r\n\t\t\t\t crvs.append(crv)\r\n\t\t\tif lineSeg is not None and lineSeg.GetType().ToString\t().Contains(\"Poly\"):\r\n\t\t\t\tfor segPt in lineSeg.Points:\r\n\t\t\t\t\tcrv = LineBetweenPoints(origin, scale, a, segPt)\r\n\t\t\t\t\ta = segPt\r\n\t\t\t\t\tcrvs.append(crv)\r\n\treturn crvs\r\n\r\ndef FormatText(text):\r\n\tfont = FontFamily(fontName)\r\n\tfontStyle = FontStyles.Normal\r\n\tfontWeight = FontWeights.Medium\r\n\ttypeFace = Typeface(font,fontStyle,fontWeight,FontStretches.Normal)\r\n\tformattedText = FormattedText(text,CultureInfo.GetCultureInfo(\"en-us\"),FlowDirection.LeftToRight,typeFace,1,Brushes.Black)\r\n\treturn formattedText\r\n\t\r\ndef ExtractCenter(geos):\r\n\tbox = dsBox.ByGeometry(geos)\r\n\tline = dsLine.ByStartPointEndPoint(box.MinPoint,box.MaxPoint)\r\n\treturn line.PointAtParameter(0.5)\r\n\t\r\n#outputs\r\ncrvs = []\r\ncentroids = []\r\n\r\n#inputs\r\ntext = IN[0]\r\norigin = dsPoint.ByCoordinates(0,0,0)\r\nscale = IN[1]\r\nfontName = IN[2]\r\n\r\nif scale is None:\r\n\tscale = 1\r\nif fontName is None:\r\n\tfontName = \"Comic Sans MS\"\r\n\r\nfor i in text:\r\n\tformattedText = FormatText(i)\r\n\ttextGeometry = formattedText.BuildGeometry(Point(0, 0))\r\n\tinstanceCurves = GetCurves(textGeometry)\r\n\tcrvs.append(GetCurves(textGeometry))\r\n\tcentroids.append(ExtractCenter(instanceCurves))\r\n\t\r\nOUT = centroids,crvs",
+      "Engine": "IronPython2",
+      "VariableInputPorts": true,
+      "Id": "9b3ec9bdd36545aa9f23de78319d6a73",
+      "Inputs": [
+        {
+          "Id": "08e06bfe0b9e45fcbee0f1490eb59ee5",
+          "Name": "IN[0]",
+          "Description": "Input #0",
+          "UsingDefaultValue": false,
+          "Level": 2,
+          "UseLevels": false,
+          "KeepListStructure": false
+        },
+        {
+          "Id": "50e7735e432c4e15bca308f1cf87d45d",
+          "Name": "IN[1]",
+          "Description": "Input #1",
+          "UsingDefaultValue": false,
+          "Level": 2,
+          "UseLevels": false,
+          "KeepListStructure": false
+        },
+        {
+          "Id": "1f791ba3464a4350b89b0fcb32ab07d6",
+          "Name": "IN[2]",
+          "Description": "Input #2",
+          "UsingDefaultValue": false,
+          "Level": 2,
+          "UseLevels": false,
+          "KeepListStructure": false
+        }
+      ],
+      "Outputs": [
+        {
+          "Id": "809c5a38d16e47348fcbc6d8203fb060",
+          "Name": "OUT",
+          "Description": "Result of the python script",
+          "UsingDefaultValue": false,
+          "Level": 2,
+          "UseLevels": false,
+          "KeepListStructure": false
+        }
+      ],
+      "Replication": "Disabled",
+      "Description": "Runs an embedded Python script."
+    },
+    {
+      "ConcreteType": "CoreNodeModels.Logic.If, CoreNodeModels",
+      "NodeType": "ExtensionNode",
+      "Id": "5234c3a4f1304b36959759d022996e51",
+      "Inputs": [
+        {
+          "Id": "6d6ef7748fec4892b1b86a049d8af2d8",
+          "Name": "test",
+          "Description": "Boolean test",
+          "UsingDefaultValue": false,
+          "Level": 2,
+          "UseLevels": false,
+          "KeepListStructure": false
+        },
+        {
+          "Id": "b0888f68c9544dea8448eeb8da60923d",
+          "Name": "true",
+          "Description": "Returned if test is true",
+          "UsingDefaultValue": false,
+          "Level": 2,
+          "UseLevels": false,
+          "KeepListStructure": false
+        },
+        {
+          "Id": "7d7d049f202a4b7d8e8dcb6600bcac10",
+          "Name": "false",
+          "Description": "Returned if test is false",
+          "UsingDefaultValue": false,
+          "Level": 2,
+          "UseLevels": false,
+          "KeepListStructure": false
+        }
+      ],
+      "Outputs": [
+        {
+          "Id": "d6f7f65045054dc88706cb34f16ac0c8",
+          "Name": "result",
+          "Description": "Result block produced",
+          "UsingDefaultValue": false,
+          "Level": 2,
+          "UseLevels": false,
+          "KeepListStructure": false
+        }
+      ],
+      "Replication": "Disabled",
+      "Description": "Conditional statement"
+    },
+    {
+      "ConcreteType": "Dynamo.Graph.Nodes.ZeroTouch.DSFunction, DynamoCore",
+      "NodeType": "FunctionNode",
+      "FunctionSignature": "Autodesk.DesignScript.Geometry.CoordinateSystem.ByOrigin@Autodesk.DesignScript.Geometry.Point",
+      "Id": "245d3c8fcce14678ae881ef804ac0d1c",
+      "Inputs": [
+        {
+          "Id": "b60cdd7e62354d81a2842d52153e398f",
+          "Name": "origin",
+          "Description": "Point\nDefault value : Autodesk.DesignScript.Geometry.Point.ByCoordinates(0, 0, 0)",
+          "UsingDefaultValue": true,
+          "Level": 2,
+          "UseLevels": false,
+          "KeepListStructure": false
+        }
+      ],
+      "Outputs": [
+        {
+          "Id": "d008a40dd1394e6681dae7f6f3fbdcf8",
+          "Name": "CoordinateSystem",
+          "Description": "CoordinateSystem",
+          "UsingDefaultValue": false,
+          "Level": 2,
+          "UseLevels": false,
+          "KeepListStructure": false
+        }
+      ],
+      "Replication": "Shortest",
+      "Description": "Create a CoordinateSystem with origin at input Point, with X and Y Axes set as WCS X and Y Axes.\n\nCoordinateSystem.ByOrigin (origin: Point = Autodesk.DesignScript.Geometry.Point.ByCoordinates(0, 0, 0)): CoordinateSystem"
+    },
+    {
+      "ConcreteType": "Dynamo.Graph.Nodes.CustomNodes.Symbol, DynamoCore",
+      "NodeType": "InputNode",
+      "Parameter": {
+        "Name": "inputText",
+        "TypeName": "string",
+        "TypeRank": 1,
+        "DefaultValue": null,
+        "Description": "input your text to visualize here"
+      },
+      "Id": "4f497c9b48c044e48827a61dfd9216b6",
+      "Inputs": [],
+      "Outputs": [
+        {
+          "Id": "2f0b7c8a2fe244b3acd466a1f55b9bfd",
+          "Name": "",
+          "Description": "Symbol",
+          "UsingDefaultValue": false,
+          "Level": 2,
+          "UseLevels": false,
+          "KeepListStructure": false
+        }
+      ],
+      "Replication": "Disabled",
+      "Description": "A function parameter, use with custom nodes.\r\n\r\nYou can specify the type and default value for parameter. E.g.,\r\n\r\ninput : var[]..[]\r\nvalue : bool = false"
+    },
+    {
+      "ConcreteType": "Dynamo.Graph.Nodes.CustomNodes.Symbol, DynamoCore",
+      "NodeType": "InputNode",
+      "Parameter": {
+        "Name": "scale",
+        "TypeName": "int",
+        "TypeRank": 0,
+        "DefaultValue": "1",
+        "Description": "what size do you want this"
+      },
+      "Id": "b437edab24224ffc84e9e6d2559dcc3d",
+      "Inputs": [],
+      "Outputs": [
+        {
+          "Id": "f76c310b4133401ab31b90ea1c1fdb72",
+          "Name": "",
+          "Description": "Symbol",
+          "UsingDefaultValue": false,
+          "Level": 2,
+          "UseLevels": false,
+          "KeepListStructure": false
+        }
+      ],
+      "Replication": "Disabled",
+      "Description": "A function parameter, use with custom nodes.\r\n\r\nYou can specify the type and default value for parameter. E.g.,\r\n\r\ninput : var[]..[]\r\nvalue : bool = false"
+    },
+    {
+      "ConcreteType": "Dynamo.Graph.Nodes.CustomNodes.Symbol, DynamoCore",
+      "NodeType": "InputNode",
+      "Parameter": {
+        "Name": "textLocation",
+        "TypeName": "var",
+        "TypeRank": -1,
+        "DefaultValue": null,
+        "Description": "the text location"
+      },
+      "Id": "4cdc0a0f5cfc43e0a7ea627960dcbc14",
+      "Inputs": [],
+      "Outputs": [
+        {
+          "Id": "3cde7ecddeb84d13bf379765156544de",
+          "Name": "",
+          "Description": "Symbol",
+          "UsingDefaultValue": false,
+          "Level": 2,
+          "UseLevels": false,
+          "KeepListStructure": false
+        }
+      ],
+      "Replication": "Disabled",
+      "Description": "A function parameter, use with custom nodes.\r\n\r\nYou can specify the type and default value for parameter. E.g.,\r\n\r\ninput : var[]..[]\r\nvalue : bool = false"
+    },
+    {
+      "ConcreteType": "Dynamo.Graph.Nodes.CustomNodes.Symbol, DynamoCore",
+      "NodeType": "InputNode",
+      "Parameter": {
+        "Name": "fontFamily",
+        "TypeName": "string",
+        "TypeRank": 0,
+        "DefaultValue": "\"Comic Sans MS\"",
+        "Description": "pick a font family. \ndefaulted to the best font for generative design"
+      },
+      "Id": "23a31a5d9a064882b72cc6b730b548bb",
+      "Inputs": [],
+      "Outputs": [
+        {
+          "Id": "ffbb5a23e4b14bf7bd63fdea21087539",
+          "Name": "",
+          "Description": "Symbol",
+          "UsingDefaultValue": false,
+          "Level": 2,
+          "UseLevels": false,
+          "KeepListStructure": false
+        }
+      ],
+      "Replication": "Disabled",
+      "Description": "A function parameter, use with custom nodes.\r\n\r\nYou can specify the type and default value for parameter. E.g.,\r\n\r\ninput : var[]..[]\r\nvalue : bool = false"
+    },
+    {
+      "ConcreteType": "Dynamo.Graph.Nodes.CustomNodes.Symbol, DynamoCore",
+      "NodeType": "InputNode",
+      "Parameter": {
+        "Name": "centeredText",
+        "TypeName": "bool",
+        "TypeRank": 0,
+        "DefaultValue": "true",
+        "Description": "would you like to center the text?"
+      },
+      "Id": "3828407035d14f208ce647eab411983c",
+      "Inputs": [],
+      "Outputs": [
+        {
+          "Id": "04b042db70634025a0d09d2463e55091",
+          "Name": "",
+          "Description": "Symbol",
+          "UsingDefaultValue": false,
+          "Level": 2,
+          "UseLevels": false,
+          "KeepListStructure": false
+        }
+      ],
+      "Replication": "Disabled",
+      "Description": "A function parameter, use with custom nodes.\r\n\r\nYou can specify the type and default value for parameter. E.g.,\r\n\r\ninput : var[]..[]\r\nvalue : bool = false"
+    },
+    {
+      "ConcreteType": "Dynamo.Graph.Nodes.CustomNodes.Output, DynamoCore",
+      "NodeType": "OutputNode",
+      "ElementResolver": null,
+      "Symbol": "textCurves",
+      "Id": "1c8dcf2e34b748d097f3cb5aee367828",
+      "Inputs": [
+        {
+          "Id": "0039cb48314240ba94af09113f136660",
+          "Name": "",
+          "Description": "",
+          "UsingDefaultValue": false,
+          "Level": 2,
+          "UseLevels": false,
+          "KeepListStructure": false
+        }
+      ],
+      "Outputs": [],
+      "Replication": "Disabled",
+      "Description": "A function output, use with custom nodes"
+    },
+    {
+      "ConcreteType": "Dynamo.Graph.Nodes.ZeroTouch.DSFunction, DynamoCore",
+      "NodeType": "FunctionNode",
+      "FunctionSignature": "Autodesk.DesignScript.Geometry.Point.Origin",
+      "Id": "f11bc7bf3b8f44f1a50eb89383549513",
+      "Inputs": [],
+      "Outputs": [
+        {
+          "Id": "73c0296080ff4745a0d0016646b19f84",
+          "Name": "Point",
+          "Description": "Point",
+          "UsingDefaultValue": false,
+          "Level": 2,
+          "UseLevels": false,
+          "KeepListStructure": false
+        }
+      ],
+      "Replication": "Auto",
+      "Description": "Get the Origin point (0,0,0)\n\nPoint.Origin ( ): Point"
+    }
+  ],
+  "Connectors": [
+    {
+      "Start": "f54b5e75b7384b0f8cd2dbcb8d36b9ea",
+      "End": "06f7df6978184bdfafe8ca8c20b5792f",
+      "Id": "e681320a56004afdabc87939ece2399e"
+    },
+    {
+      "Start": "5ff4c60f59ca45f79274326819afe0a2",
+      "End": "0039cb48314240ba94af09113f136660",
+      "Id": "1b0e1a3d200d42178b40e1f42d538067"
+    },
+    {
+      "Start": "ba020ef8eff7423f9a4da3cb3eb12301",
+      "End": "b0888f68c9544dea8448eeb8da60923d",
+      "Id": "4be15294fcff4ba8b7edd74603ad1a77"
+    },
+    {
+      "Start": "80e2e508edcc43a18a96bd0ee7026e73",
+      "End": "92901bdec19f4f9593f3d4987797acf9",
+      "Id": "7d0e81d344c3419790297752e1b81dc0"
+    },
+    {
+      "Start": "809c5a38d16e47348fcbc6d8203fb060",
+      "End": "acc35ad89aa54050aade9ca26c73a94f",
+      "Id": "ec38beb5af45414b9dfb64eaf981475e"
+    },
+    {
+      "Start": "d6f7f65045054dc88706cb34f16ac0c8",
+      "End": "b60cdd7e62354d81a2842d52153e398f",
+      "Id": "24d0545ab0354855b3436b94aa4defa0"
+    },
+    {
+      "Start": "d008a40dd1394e6681dae7f6f3fbdcf8",
+      "End": "2e1792cd17a54715b624ad0b26c6fc02",
+      "Id": "561eb4e29a354ba3a5ab0d9ca4ef3d4f"
+    },
+    {
+      "Start": "2f0b7c8a2fe244b3acd466a1f55b9bfd",
+      "End": "08e06bfe0b9e45fcbee0f1490eb59ee5",
+      "Id": "67da2b7058d54ab496897f47cd9e81a3"
+    },
+    {
+      "Start": "f76c310b4133401ab31b90ea1c1fdb72",
+      "End": "50e7735e432c4e15bca308f1cf87d45d",
+      "Id": "7c3a89878a814b7fbe647c8cb41be11d"
+    },
+    {
+      "Start": "3cde7ecddeb84d13bf379765156544de",
+      "End": "e606a1d05d714923b57667ef91acdab4",
+      "Id": "11fdb5d2a87c456e9e631a676f84e381"
+    },
+    {
+      "Start": "ffbb5a23e4b14bf7bd63fdea21087539",
+      "End": "1f791ba3464a4350b89b0fcb32ab07d6",
+      "Id": "88fe78ee9058468483b6729c6f37413d"
+    },
+    {
+      "Start": "04b042db70634025a0d09d2463e55091",
+      "End": "6d6ef7748fec4892b1b86a049d8af2d8",
+      "Id": "f523992e9f1344ddb11d6b8c62996506"
+    },
+    {
+      "Start": "73c0296080ff4745a0d0016646b19f84",
+      "End": "7d7d049f202a4b7d8e8dcb6600bcac10",
+      "Id": "f3244f5e522448f2836a54b891fe1b0e"
+    }
+  ],
+  "Dependencies": [],
+  "NodeLibraryDependencies": [],
+  "Bindings": [],
+  "View": {
+    "Dynamo": {
+      "ScaleFactor": 1.0,
+      "HasRunWithoutCrash": false,
+      "IsVisibleInDynamoLibrary": true,
+      "Version": "2.11.1.4675",
+      "RunType": "Manual",
+      "RunPeriod": "1000"
+    },
+    "Camera": {
+      "Name": "Background Preview",
+      "EyeX": 1.1667680740356445,
+      "EyeY": 32.460838317871094,
+      "EyeZ": 8.6024556159973145,
+      "LookX": 1.6479701995849609,
+      "LookY": -35.360618591308594,
+      "LookZ": -11.026692390441895,
+      "UpX": 0.14096821844577789,
+      "UpY": 0.30070579051971436,
+      "UpZ": -0.9432412981987
+    },
+    "NodeViews": [
+      {
+        "ShowGeometry": false,
+        "Name": "CoordinateSystem.ByOrigin",
+        "Id": "f2759991c3f04fd6bec17391304aff3b",
+        "IsSetAsInput": false,
+        "IsSetAsOutput": false,
+        "Excluded": false,
+        "X": 2334.5063322867923,
+        "Y": 638.03136323148658
+      },
+      {
+        "ShowGeometry": true,
+        "Name": "Geometry.Transform",
+        "Id": "3dcfc6354daa47b09fa46fab6ea48151",
+        "IsSetAsInput": false,
+        "IsSetAsOutput": false,
+        "Excluded": false,
+        "X": 2636.8009018443822,
+        "Y": 532.30380901446892
+      },
+      {
+        "ShowGeometry": false,
+        "Name": "Code Block",
+        "Id": "80ec4b2d0ada4fcebc55482589040221",
+        "IsSetAsInput": false,
+        "IsSetAsOutput": false,
+        "Excluded": false,
+        "X": 1381.208571518157,
+        "Y": 411.910785684169
+      },
+      {
+        "ShowGeometry": false,
+        "Name": "Python Script",
+        "Id": "9b3ec9bdd36545aa9f23de78319d6a73",
+        "IsSetAsInput": false,
+        "IsSetAsOutput": false,
+        "Excluded": false,
+        "X": 1237.738911411182,
+        "Y": 411.910785684169
+      },
+      {
+        "ShowGeometry": false,
+        "Name": "If",
+        "Id": "5234c3a4f1304b36959759d022996e51",
+        "IsSetAsInput": false,
+        "IsSetAsOutput": false,
+        "Excluded": false,
+        "X": 2130.0932040790381,
+        "Y": 407.837399366208
+      },
+      {
+        "ShowGeometry": false,
+        "Name": "CoordinateSystem.ByOrigin",
+        "Id": "245d3c8fcce14678ae881ef804ac0d1c",
+        "IsSetAsInput": false,
+        "IsSetAsOutput": false,
+        "Excluded": false,
+        "X": 2325.845322713692,
+        "Y": 407.837399366208
+      },
+      {
+        "ShowGeometry": true,
+        "Name": "Input",
+        "Id": "4f497c9b48c044e48827a61dfd9216b6",
+        "IsSetAsInput": false,
+        "IsSetAsOutput": false,
+        "Excluded": false,
+        "X": 792.79570246158755,
+        "Y": 342.4875952468235
+      },
+      {
+        "ShowGeometry": true,
+        "Name": "Input",
+        "Id": "b437edab24224ffc84e9e6d2559dcc3d",
+        "IsSetAsInput": false,
+        "IsSetAsOutput": false,
+        "Excluded": false,
+        "X": 850.79570246158755,
+        "Y": 447.87962016801896
+      },
+      {
+        "ShowGeometry": true,
+        "Name": "Input",
+        "Id": "4cdc0a0f5cfc43e0a7ea627960dcbc14",
+        "IsSetAsInput": false,
+        "IsSetAsOutput": false,
+        "Excluded": false,
+        "X": 924.79570246158755,
+        "Y": 676.66367001040987
+      },
+      {
+        "ShowGeometry": true,
+        "Name": "Input",
+        "Id": "23a31a5d9a064882b72cc6b730b548bb",
+        "IsSetAsInput": false,
+        "IsSetAsOutput": false,
+        "Excluded": false,
+        "X": 669.79570246158755,
+        "Y": 553.27164508921442
+      },
+      {
+        "ShowGeometry": true,
+        "Name": "Input",
+        "Id": "3828407035d14f208ce647eab411983c",
+        "IsSetAsInput": false,
+        "IsSetAsOutput": false,
+        "Excluded": false,
+        "X": 784.79570246158755,
+        "Y": 782.05569493160533
+      },
+      {
+        "ShowGeometry": true,
+        "Name": "Output",
+        "Id": "1c8dcf2e34b748d097f3cb5aee367828",
+        "IsSetAsInput": false,
+        "IsSetAsOutput": false,
+        "Excluded": false,
+        "X": 3010.1818888492794,
+        "Y": 532.30380901446892
+      },
+      {
+        "ShowGeometry": true,
+        "Name": "Point.Origin",
+        "Id": "f11bc7bf3b8f44f1a50eb89383549513",
+        "IsSetAsInput": false,
+        "IsSetAsOutput": false,
+        "Excluded": false,
+        "X": 1711.4128441056548,
+        "Y": 479.86393180131734
+      }
+    ],
+    "Annotations": [],
+    "X": -830.80252160257714,
+    "Y": -168.57083045199363,
+    "Zoom": 0.80821986639302912
+  }
+}
